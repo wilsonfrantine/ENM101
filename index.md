@@ -14,5 +14,8 @@ Veja abaixo a lista completa de exercícios:
 
 ### Dúvidas?
 
-Caso tenha dúvidas em relação ao material envie um email: __wilsonfrantine@gmail.com__
-__Prof. Dr. Wilson Frantine-Silva UENF-RJ__ 
+Caso tenha dúvidas em relação ao material envie um email: 
+
+_wilsonfrantine@gmail.com_
+
+_Prof. Dr. Wilson Frantine-Silva UENF-RJ_ 
