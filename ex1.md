@@ -5,7 +5,7 @@ author: Dr. Wilson Frantine-Silva - UENF-RJ
 
 *Por: Dr. Wilson Frantine-Silva - UENF-RJ*
 
-# 0. Preparando pacotes
+# Preparando pacotes
  **Caso essa seja a sua primeira vez utilizando esses pacotes, talvez seja necessário instalar alguns deles:** 
 ```{r}
   #Pacotes necessários
