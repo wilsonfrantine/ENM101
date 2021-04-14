@@ -1,8 +1,10 @@
 ---
-title: "Exercicio limpeza de dados"
-author: "Dr. Wilson Frantine-Silva - UENF-RJ"
-output: html_document
+title:"Exercício 1: carregando e limpando dados"
+author: Dr. Wilson Frantine-Silva - UENF-RJ
 ---
+
+Por: *Dr. Wilson Frantine-Silva - UENF-RJ*
+
 # 0. Preparando pacotes
  **Caso essa seja a sua primeira vez utilizando esses pacotes, talvez seja necessário instalar alguns deles:** 
 ```{r}
@@ -88,7 +90,9 @@ Veja que para os dois comandos, foram retornados dados únicos. Assim, podemos s
 
 **Dica importante: caso note que é necessário alterar algo em relação ao nome da espécie, nunca faça isso no objeto original, crie um objeto novo, algo como:**
 
-` dados<-occs$data `. Em seguida edite faça as alterações sobre o objeto `dados`.
+`dados<-occs$data`
+
+Em seguida edite faça as alterações sobre o objeto `dados`
 
 # 3. Checando coordenadas
 
@@ -98,17 +102,15 @@ Vamos primeiro plotar a latitude e longitude para observar seu padrão:
 
 ```{r}
 plot(decimalLatitude ~ decimalLongitude, data = occs$data)
-#map(, , , add = TRUE)
-```
-*Plot lat ~ long*
 
-Observe como temos várias ocorrências sobrepostas entre -20S e -35W. Essas sobreposições são certamente duplicatas e precisaremos remove-las. Do mesmo modo, temos outlyers próximo à `0` graus de latitude e longitude, além de um dado entre -50S e -25W. Certamente esses dados são erros e precisaremos corrigí-los.
+```
+Observe que como temos várias ocorrências sobrepostas entre -20S e -35W. Essas sobreposições são certamente duplicatas e precisaremos remove-las. Do mesmo modo, temos outlyers próximo à `0` graus de latitude e longitude, além de um dado entre -50S e -25W. Certamente esses dados são erros e precisaremos corrigí-los.
 
 ### Primero checaremos a unicidade dos dados...
 
 Para esse exercício não precisaremos de redundância, portanto trabalharemos apenas com registros únicos, que não se repetem tampouco em Lat ou Long.
 
-Aplicaremos a função "levels" que retorna os níveis (elementos únicos) dos fatores (variável categórica). A função "as.factor" transforma em fator (categorias) o parâmetro que é passado, neste caso, os dados da coluna decimalLatitude.
+Aplicaremos a função "levels" que retorna os níveis (elementos únicos) dos fatores (variável categórica). A função "as.factor" transforma em fator (categorias) o parâmetro que é passado, neste caso, os dados da coluna `decimalLatitude`
 
 ```{r}
 levels(as.factor(occs$data$decimalLatitude))
@@ -135,11 +137,11 @@ print(paste("sem NA:", nrow(occs.coord))) #sem NA
 
 ```
 
-Após remover os "NA" podemos salvar os dados em um novo objeto (chamado aqui "gbif") que será um dataframe com três colunas:
-_species_, _decimalLongitude_ e _decimalLatitude_. Note que a ordem desses campos é importate. Devem corresponder à *nome da espécie*, *valor para o eixo X* e *valor para o eixo Y*
-   + PS: _alterei a ordem dos campos em relação ao vídeo, agora estão como deveriam estar_
+Após remover os `NA`, podemos salvar os dados em um novo objeto (chamado aqui "gbif") que será um dataframe com três colunas:
+`species`, `decimalLongitude` e `decimalLatitude`. Note que a ordem desses campos é importate. Devem corresponder à *nome da espécie*, *valor para o eixo X* e *valor para o eixo Y*
+   + PS: _alterei a ordem dos campos em relação à aula, agora estão como deveriam estar_
    
-**Note que aqui não utilizaremos os dados adicionais da tabela, por isso nos damos ao luxo de utilizar apenas as três colunas.**
+**Note que aqui não utilizaremos os dados adicionais da tabela, por isso nos damos ao luxo de descartar as demais.**
 
 ```{r}
 #Criando uma tabela nova apenas com spp, long e lat.
@@ -151,7 +153,8 @@ head(gbif) #primeiras 10 linhas
 tail(gbif) #últimas 10 linhas
 ```
 
-Há formas alternativas de visualizar os dados:
+Há formas alternativas de visualizar os dados no Rstudio:
+
 ```{r}
 #vizualizando os dados no Rstudio
 View(gbif)
@@ -177,17 +180,17 @@ Podemos novamente visualizar as latitudes.
 plot(gbif$decimalLongitude)
 plot(gbif$decimalLatitude)
 ```
-![Plotes de Latitude e longitude. Note que nestes plotes há uma diferença entre plotar Latitude contra longitude. Aqui podemos ver a repetição dos valores (em Y) ao longo dos registros (em X).]
+Plots de Latitude e longitude. Note que estes plots são diferentes daqueles onde plotamos Latitude contra longitude. Aqui podemos ver a repetição dos valores (em Y) ao longo dos registros (em X).
 
 #### Checando os dados no mapa:
-As próximas linhas de código vão importar os dados de vetor do maptools de um conjunto chamado wrld_simpl que possue as fronteiras dos países do mundo.
+As próximas linhas de código vão importar os dados de vetor do pacote `maptools` de um conjunto chamado `wrld_simpl` que possue as fronteiras dos países do mundo.
 
 ```{r}
 #data from maptools
 data("wrld_simpl")
 ```
 
-As próximas linhas efetivamente plotam o mapa.
+Em seguida, plotamos o mapa.
 ```{r}
 #plotando o mapa
 plot(wrld_simpl, xlim=c(-90, 90), ylim=c(-60,60), axes=T, col='olivedrab3',bg='lightblue')
@@ -196,27 +199,24 @@ plot(wrld_simpl, xlim=c(-90, 90), ylim=c(-60,60), axes=T, col='olivedrab3',bg='l
 points(gbif[ ,c(2,3)], col="#FF0000")
 #Note que em pontos, as colunas 2, 3 devem representar Long e Lat, nessa ordem. Vídeo possui ordem desses fatores trocada.
 ```
-*Distribuição dos pontos de coleta sobre o sul do Brasil.*
-
-Note que é possível mudar o intervalo de plot alterando os parâmetros xlim e ylim.
+Este plot gera a distribuição dos pontos de coleta sobre o sul do Brasil. Note que é possível mudar o intervalo de plot alterando os parâmetros `xlim` e `ylim`
 
 ### Remover os pontos com valor zero ou fora do "range"
 
-Note que as linhas a seguir executam uma série de códigos para manter os pontos entre -40 e -18 de Lat(Sul e Norte) e -40 e -60 Long (Leste - Oeste) 
+As linhas a seguir executam uma série de códigos para manter os pontos entre -40 e -18 de Lat(Sul e Norte) e -40 e -60 Long (Leste - Oeste) 
 
 ```{r}
 #Mantendo dados diferentes de 0 em lat e long
-gbif <- 
-gbif[gbif$decimalLatitude != 0 & gbif$decimalLongitude != 0, ]
+gbif <- gbif[gbif$decimalLatitude != 0 & gbif$decimalLongitude != 0, ]
+
 #Mantendo registros em Lat maior que -40S **ou** maior q long -40W
-gbif <- 
-gbif[gbif$decimalLatitude > -40 | gbif$decimalLongitude > -40, ]
+gbif <- gbif[gbif$decimalLatitude > -40 | gbif$decimalLongitude > -40, ]
+
 #Mantendo dados menores que -18S **ou** -60W
-gbif <- 
-gbif[gbif$decimalLatitude < -18 | gbif$decimalLongitude < -60, ]
+gbif <- gbif[gbif$decimalLatitude < -18 | gbif$decimalLongitude < -60, ]
+
 #Mantendo valores diferentes de valores específicos 
-gbif <- 
-gbif[gbif$decimalLatitude != 55.000 -18 & gbif$decimalLongitude != -26.00000, ]
+gbif <- gbif[gbif$decimalLatitude != 55.000 -18 & gbif$decimalLongitude != -26.00000, ]
 
 ```
 
@@ -228,14 +228,12 @@ plot(gbif$decimalLongitude)
 plot(gbif$decimalLatitude)
 
 ```
-*Plots de latitude e longitude.*
-
-Note que plotamos latitude ou longitude em Y e seus registros ou linhas da tabela em X. Logo cada ponto em x corresponde à uma linha e cada valor correspondente em y uma latitude ou longitude. Note como os dados se repetem. É necessário remover as duplicatas.
+Note aqui que plotamos tanto latitude quanto longitude no eixo `Y` de seus respectivos gráficos, enquanto seus registros ou linhas da tabela são representados em `X`. Logo, cada ponto em `x` corresponde à uma linha e cada valor correspondente em `y` uma latitude ou longitude, respectivamente no primeiro e segundo gráfico de saída. Repare em como os dados se repetem. É necessário remover as duplicatas.
 
 
 ### Removendo duplicatas
 
-Remover duplicatas no R é fácil. Basta usar a função nativa "unique". Essa função retarna apenas valores únicos. Lembre-se de executar essa função em um objeto novo para não sobrescrever nada.
+Remover duplicatas no R é fácil. Basta usar a função nativa `unique`. Essa função retarna apenas valores únicos, ou seja, que não possuem a mesma combinação de campos (`species | decimalLongitude | decimalLatitude`). Lembre-se de executar essa função em um objeto novo para não sobrescrever nada.
 
 ```{r}
 gbif.unique <- unique(gbif)
