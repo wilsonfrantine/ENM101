@@ -9,7 +9,7 @@ Ao longo da disciplina postaremos outros exercícios relacionados.
 
 Veja abaixo a lista completa de exercícios:
 
-1. [Obtendo e limpando dados de ocorrência de espécies a partir do GBIF](https://github.com/wilsonfrantine/ENM101/ex1.html)
+1. [Obtendo e limpando dados de ocorrência de espécies a partir do GBIF](https://github.com/wilsonfrantine/ENM101/ex1.md)
 2. Trabalhando com dados locais (em produção)
 3. Mais exercícios em breve...
 
