@@ -1,5 +1,5 @@
 ---
-title: "Exercício 1 - carregando e limpando dados"
+title: "Exercício 1 - obtenção e limpeza de dados de ocorrências"
 author: Dr. Wilson Frantine-Silva - UENF-RJ
 ---
 
