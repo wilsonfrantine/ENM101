@@ -18,4 +18,4 @@ Veja abaixo a lista completa de exercícios:
 Envie um email para _wilsonfrantine@gmail.com_
 
 Bons estudos! <br />
-_Prof. Dr. Wilson Frantine-Silva UENF-RJ_ 
+_Prof. Dr. Wilson Frantine-Silva UENF-RJ_
