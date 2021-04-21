@@ -1,4 +1,4 @@
-## Bem vindo à ENM101
+## Ecological Niche Modelling - ENM101
 
 Nesta página você encontrará os links para os exercícios referentes à disciplina e algumas dicas.
 
