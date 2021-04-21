@@ -10,12 +10,16 @@ Ao longo da disciplina postaremos outros exercícios relacionados.
 Veja abaixo a lista completa de exercícios:
 
 1. [Obtendo e limpando dados de ocorrência de espécies a partir do GBIF](https://wilsonfrantine.github.io/ENM101/ex1)
-2. Trabalhando com dados locais (em produção)
-3. Mais exercícios em breve...
+2. [Variáveis Ambientais](https://wilsonfrantine.github.io/ENM101/ex2.html) 
+3. [Técnicas para explorar o background](https://wilsonfrantine.github.io/ENM101/ex3.html)
 
 ### Dúvidas?
 
 Envie um email para _wilsonfrantine@gmail.com_
 
 Bons estudos! <br />
-_Prof. Dr. Wilson Frantine-Silva UENF-RJ_
+
+[*Prof. Dr. Wilson Frantine-Silva*](https://www.researchgate.net/profile/Wilson-Frantine-Silva) <br />
+Pesquisador PNPD - [ORCID](https://orcid.org/0000-0002-4293-0471) <br />
+Universidade Estadual do Norte Fluminense Darcy Ribeiro - LCA.<br />
+[Programa de Pós-Graduação em Ecologia e Recursos Naturais](https://uenf.br/posgraduacao/ecologia-recursosnaturais/)
