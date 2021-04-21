@@ -13,7 +13,7 @@
 <meta name="author" content="Dr. Wilson Frantine-Silva" />
 
 
-<title>Exercício 2: Explorando background</title>
+<title>Exercício 2: Variáveis ambientais</title>
 
 <script>// Hide empty <a> tag within highlighted CodeBlock for screen reader accessibility (see https://github.com/jgm/pandoc/issues/6352#issuecomment-626106786) -->
 // v0.0.1
@@ -141,7 +141,7 @@ a.sourceLine {
 
 
 <section class="page-header">
-<h1 class="title toc-ignore project-name">Explorando background</h1>
+<h1 class="title toc-ignore project-name">Exercício 2: Variáveis ambientais</h1>
 <h4 class="author project-author">Dr. Wilson Frantine-Silva</h4>
 <h4 class="date project-date">4/20/2021</h4>
 </section>
@@ -172,13 +172,13 @@ a.sourceLine {
 <span id="cb3-5"><a href="#cb3-5"></a><span class="co">#install.package(&quot;dismo&quot;)</span></span>
 <span id="cb3-6"><a href="#cb3-6"></a></span>
 <span id="cb3-7"><a href="#cb3-7"></a><span class="co">#escolha o diretório que melhor se encaixar para você...</span></span>
-<span id="cb3-8"><a href="#cb3-8"></a><span class="kw">setwd</span>(<span class="st">&quot;/media/wilson/MIDGARD/Documents/AARE - MNE/Aula 5 - Environmental Layers/exercício R/&quot;</span>)</span></code></pre></div>
+<span id="cb3-8"><a href="#cb3-8"></a><span class="kw">setwd</span>(<span class="st">&quot;/Caminho até o diretódio raiz de sua preferência/&quot;</span>)</span></code></pre></div>
 <p>Agora, faremos o download das variáveis bioclimáticas do WorldClim: É recomendado que você faça o download diretamente do <a href="https://biogeo.ucdavis.edu/data/worldclim/v2.1/base/wc2.1_10m_bio.zip">site</a></p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a><span class="co">#caso já tenha as variáveis em seu computador:</span></span>
 <span id="cb4-2"><a href="#cb4-2"></a><span class="co">#bio1</span></span>
-<span id="cb4-3"><a href="#cb4-3"></a>temperatura&lt;-<span class="kw">raster</span>(<span class="st">&quot;/media/wilson/MIDGARD/Documents/AARE - MNE/worldclim_layers/wc2.1_10m_bio/wc2.1_10m_bio_1.tif&quot;</span>)</span>
+<span id="cb4-3"><a href="#cb4-3"></a>temperatura&lt;-<span class="kw">raster</span>(<span class="st">&quot;/caminho até suas variaveis/worldclim_layers/wc2.1_10m_bio/wc2.1_10m_bio_1.tif&quot;</span>)</span>
 <span id="cb4-4"><a href="#cb4-4"></a><span class="co">#bio5:</span></span>
-<span id="cb4-5"><a href="#cb4-5"></a>precipitacao&lt;-<span class="kw">raster</span>(<span class="st">&quot;/media/wilson/MIDGARD/Documents/AARE - MNE/worldclim_layers/wc2.1_10m_bio/wc2.1_10m_bio_12.tif&quot;</span>)</span></code></pre></div>
+<span id="cb4-5"><a href="#cb4-5"></a>precipitacao&lt;-<span class="kw">raster</span>(<span class="st">&quot;/caminho até suas variaveis/worldclim_layers/wc2.1_10m_bio/wc2.1_10m_bio_12.tif&quot;</span>)</span></code></pre></div>
 <p>Contudo, a função <code>getData()</code> do pacote <code>raster</code> pode fazer o download dessas variáveis. Lembre-se que essas variáveis ficarão na memória durante a sessão e serão apagas após fecha or R. Caso queira mantê-las em sua máquina, você deve salvá-las no disco:</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a><span class="co">#Caso queira baixá-las pelo R:</span></span>
 <span id="cb5-2"><a href="#cb5-2"></a>worldclim&lt;-raster<span class="op">::</span><span class="kw">getData</span>(<span class="dt">name =</span> <span class="st">&quot;worldclim&quot;</span>, <span class="dt">var =</span> <span class="st">&quot;bio&quot;</span>, <span class="dt">res=</span><span class="dv">10</span>, <span class="dt">download =</span> <span class="ot">TRUE</span>, <span class="dt">path =</span> <span class="kw">getwd</span>())</span></code></pre></div>
@@ -325,12 +325,12 @@ a.sourceLine {
 <p>Repare que não modelamos a intersecção com fatores bióticos, mas a inferimos com base em porções possivelmente acessíveis. Se a espécie tem acesso à uma área dentro do “envelope” do <strong>nicho fundamental</strong>, mas de fato não ocorre logo deve haver uma desvantagem biótica. Por outro lado, se é uma porção do nicho fundamental, mas há uma barreira geográfica para alcaçar aquele ponto, então pode haver interações bióticas favoráveis, mas não temos certeza até que a espécie alcance aquela área.</p>
 <p>#Considerações finais</p>
 <p>Neste simples exercício de extração de variáveis e visualização podemos observar muito sobre nicho e suas interrelações. O nicho hipervolumétrico de Hutchinson pode ser decomposto em algumas macrodimensões: condições (<em>nicho fundamental</em>, “fatores abióticos” ou mais precisamente variáveis scenopoéticas), fatores bióticos (<em>nicho realizado</em>, incluindo recursos e interações) e acessibilidade (<em>nicho existente</em> ou <em>biotópos de Hutchinson</em>, determinados por espaços no universo geográfico acessíveis à espécie)</p>
-<p>Espero que o exercício ajude. &lt;&gt; <em>Bons estudos.</em></p>
+<p>Espero que o exercício ajude. <br />
+  Bons estudos!</p>
 <hr />
-<p>*<a href="https://www.researchgate.net/profile/Wilson-Frantine-Silva">Prof. Dr. Wilson Frantine-Silva*</a> </br> Pesquisador PNPD - <a href="https://orcid.org/0000-0002-4293-0471">ORCID</a> </br> Universidade Estadual do Norte Fluminense Darcy Ribeiro - LCA.</br> <a href="https://uenf.br/posgraduacao/ecologia-recursosnaturais/">Programa de Pós-Graduação em Ecologia e Recursos Naturais</a></p>
+<p><a href="https://www.researchgate.net/profile/Wilson-Frantine-Silva"><i>Prof. Dr. Wilson Frantine-Silva<\i></a> </br> Pesquisador PNPD - <a href="https://orcid.org/0000-0002-4293-0471">ORCID</a> </br> Universidade Estadual do Norte Fluminense Darcy Ribeiro - LCA.</br> <a href="https://uenf.br/posgraduacao/ecologia-recursosnaturais/">Programa de Pós-Graduação em Ecologia e Recursos Naturais</a></p>
 </div>
 </section>
-
 
 
 <!-- code folding -->
