@@ -1,0 +1,233 @@
+---
+title: "Variáveis Ambientais"
+author: "Dr. Wilson Frantine-Silva"
+output: 
+  prettydoc::html_pretty:
+  theme: cayman
+  highlight: github
+---
+
+# Exercício 2: Variáveis ambientais
+Neste exercício iremos explorar algumas variáveis ambientais através do ambiente R.
+
+Os passos são os seguintes:
+
+1. Carregar as variáveis ambientais
+2. Criar pontos aleatórios sobre essas variáveis
+3. Extrair valores dessas variáveis
+4. Explorar a relação entre esses valores que chamaremos background
+5. Explorar a diferença entre os valores de background contra nossos pontos de ocorrência.
+
+
+## 1. Carregando variáveis
+
+Antes de mais nada, vamos carregar as bibliotecas e setar o diretório de trabalho:
+
+```{r}
+
+library(raster)
+library(dismo)
+#Essa é a primeira vez que utilizamos o pacote `dismo`. Provavelmente você precisará instalá-lo.
+#Lembre-se caso não tenha esse pacote, instale-o utilizando:
+#install.package("raster")
+#install.package("dismo")
+
+#escolha o diretório que melhor se encaixar para você...
+setwd("/media/wilson/MIDGARD/Documents/AARE - MNE/Aula 5 - Environmental Layers/exercício R/")
+```
+
+Agora, faremos o download das variáveis bioclimáticas do WorldClim:
+É recomendado que você faça o download diretamente do [site](https://biogeo.ucdavis.edu/data/worldclim/v2.1/base/wc2.1_10m_bio.zip)
+
+```{r}
+#caso já tenha as variáveis em seu computador:
+#bio1
+temperatura<-raster("/media/wilson/MIDGARD/Documents/AARE - MNE/worldclim_layers/wc2.1_10m_bio/wc2.1_10m_bio_1.tif")
+#bio5:
+precipitacao<-raster("/media/wilson/MIDGARD/Documents/AARE - MNE/worldclim_layers/wc2.1_10m_bio/wc2.1_10m_bio_12.tif")
+```
+
+Contudo, a função `getData()` do pacote `raster` pode fazer o download dessas variáveis. Lembre-se que essas variáveis ficarão na memória durante a sessão e serão apagas após fecha or R. Caso queira mantê-las em sua máquina, você deve salvá-las no disco:
+
+```{r}
+#Caso queira baixá-las pelo R:
+worldclim<-raster::getData(name = "worldclim", var = "bio", res=10, download = TRUE, path = getwd())
+```
+
+
+Na função `getData` acima, baixamos os dados chamados worldclim através 
+do parâmetro `name` note ainda que `download = TRUE` faz o download dos dados
+para o nosso PC. Além disso, `path = getwd()`, dirá ao R para baixar os dados no
+diretório de trabalho (`working directory`). Caso queiramos baixa-las em outro lugar,
+devemos dar um diretório entre aspas para o parâmetro, ex: `path = "C:/User..."`
+
+Outro detalhe importante é que a função `getData()` baixa os dados da versão 1.4 do worldclim. Caso queira usar os dados da versão 2.0, será necessário baixar do [site WorldClim](http://worldclim.org).
+
+```{r}
+#Se pedirmos para listar os arquivos agora, deveremos ver vários arquivos ".bil" e ".hdr"
+list.files("./wc10", recursive = F)
+```
+
+##Atenção, apenas rode essa parte se quiser baixar as variáveis diretamente pelo R
+Para utilizar os dados do objeto `worldclim` baixado:
+```{r}
+#Corra apenas se preferir baixar pelo R
+#temperatura<-worldclim$bio1
+#precipitacao<-worldclim$bio12
+```
+Se quiser checar o nome das 19 variáveis bioclim, [clique aqui](https://www.worldclim.org/data/bioclim.html).
+
+Podemos facilmente visualizar as nossas variáveis pelo comando plot:
+```{r}
+#Neste comando foi adicionado uma paleta de cores chamada rainbow para, ilustrar melhor nossas variávies. 
+#Se quiser mais detalhes, busque por ??rainbow no terminal do R.
+plot(temperatura,  col = rainbow(100, start=0, end=0.9, rev = T))
+plot(precipitacao, col = rainbow(100, start= 0.5, end=0.95, rev = F))
+```
+
+# 2. Criar pontos aleatórios sobre essas variáveis
+
+Utilizaremos a função `randomPoints` do pacote `dismo` para criar pontos aleatórios sob a nossa camada.
+```{r}
+set.seed(1234)
+background<- randomPoints(temperatura, 100)
+#para visualizar, corremos a linha a seguir:
+plot(temperatura)+
+points(background)
+```
+
+Veja que temos como resultado 100 pontos aleatórios ao longo de toda a camada `temperatura`. Vamos fazer o mesmo, mas agora limitando a extensão:
+
+```{r}
+set.seed(1234)
+extensao <- c(-82, -35, -54, 13) # Na order: xmin, xmax, ymin, ymax
+background<- randomPoints(temperatura, 1000, ext = extensao)
+#para visualizar, corremos a linha a seguir:
+plot(temperatura)+
+  points(background)
+
+#Para usar poligonos como máscara, utilizar pacote sp...
+```
+
+Note como agora, os pontos ficaram concentrados apenas na região da América do Sul, onde delimitamos pelo argument `ext` da função `randomPoints`. Você pode definar a extensão onde achar apropriado para coletar os pontos de background.
+
+>O cenceito de background será abordado mais adiante na disciplina. Por hora, podemos pensar nesse conceito como uma forma de caracterizar o ambiente onde nosso organismo vive. Isso serve tanto para um continente, como para um fragmento florestal.
+
+# 3. Extrair valores dessas variáveis
+
+Agora já temos um objeto chamado `background` com valores de `X` e `Y` para extraírmos os valores das nossas variáveis. Então, mãos a obra...
+
+```{r}
+#veja como se parece o objeto background:
+head(background)
+```
+
+Para extrair os valores das variáveis é muito fácil, vamos apenas utilizar a função `extract` do pacote `raster`:
+
+```{r}
+#Vamos criar um objeto chamado bgvalues para abrigar os dados extraidos das variáveis
+#Note que usamos dentro uma função chamada stack() que junta temperatura e precipitação
+#em um núnico objeto com duas camadas.
+bgvalues<-extract(stack(temperatura, precipitacao), background)
+colnames(bgvalues)<-c("temperatura", "precipitacao")
+plot(bgvalues, col="blue")
+plot(background)
+```
+
+A figura resultante é uma representação em duas dimensões do clima da América do Sul.
+
+# 4. Explorar a relação entre os valores que chamamos background
+
+Uma vez que esses valores extraídos aleatoriamente caracterizam o ambiente, podemos comparar dois espaços geográficos **G**, como por exemplo a América do Sul e América do norte:
+
+```{r}
+set.seed(1234)
+#primeiro criamos objetos contento os limites das duas Américas:
+ExtensaoAmSul<-extent(-82, -35, -54, 13) #xmin, xmax, ymin, ymax
+ExtensaoAmNor<-extent(-179, -12, 6, 84)
+
+#depois criamos um objeto raster com as duas camadas do WorldClim que importamos no início
+clima<-stack(temperatura, precipitacao)
+
+#Agora criamos pontos aleatórios sobre os dois continentes
+bgAS<-randomPoints(mask = clima, n = 1000, ext = ExtensaoAmSul)
+bgAN<-randomPoints(mask = clima, n = 1000, ext = ExtensaoAmNor)
+
+#Agora extraímos os pontos:
+AS<-extract(clima, bgAS)
+AN<-extract(clima, bgAN)
+
+plot(AS, col= rgb(0,0,1, 0.5), xlim = c(-27, 29), ylim=c(0, 7000), pch=20, xlab="temperatura", ylab="precipitação" )+
+  lines(AS[c(chull(AS), chull(AS)[1]), ], col="blue", type="l")+
+  points(AN, col = rgb(1,0,0, 0.5), pch=20)+
+  lines(AN[c(chull(AN), chull(AN)[1]), ], col="red")
+
+```
+
+O bloco de código acima produz um plot comparando a disposição da estrutura ambiental na América do Norte (vermelho) e América do Sul (azul). Note que não só o limite das variáveis é diferente, mas a densidade dos pontos também são. A tendência é que, quanto mais variáveis adicionarmos à esses pontos geográficos, mais veremos a diferença entre as porções do continente.
+
+
+# 5. Explorar a diferença entre os valores de background contra nossos pontos de ocorrência.
+
+À exemplo do que observamos no bloco de código acima, iremos agora compara a diferença entre o ambiente existente na América do Sul e as áreas ocupadas por uma espécie endêmica à Mata Atlântica. Para tanto, iremos importar os pontos que limpanos no [exercício anterior](http://wilsonfrantine.github.io/ENM101/ex1).
+
+```{r}
+set.seed(1234)
+eg.ann<-read.csv("../../Aula 4 - Load and Data Cleaning/input.coordinates.txt", sep = "\t")
+
+egval<-extract(clima, eg.ann[ , 2:3])
+
+plot(AS, col= rgb(0,0,1, 0.4), xlim = c(0, 29), pch=20, 
+     xlab="temperatura", ylab="precipitação" )+
+  lines(AS[c(chull(AS), chull(AS)[1]), ], col="blue", type="l")+
+  polygon(egval[c(chull(egval), chull(egval)[1]),], col=rgb(1,0,0, 0.4), border = rgb(0.5,0,0, 1))+
+  points(egval, col= rgb(0.3,0,0, 0.8), pch=20)
+
+
+```
+
+Nesta figura, vemos uma amostra de toda a variação ambiental (considerando temperatura e precipitação) existente na América do Sul (em azul). Os pontos representam condições amostradas, enquanto *a área destacada pela linha* (*convex hull*) demarca as combinações de condições que poderiam acontecer considerando os limites das condições amostradas. 
+
+Note que a nossa espécie, *Euglossa annectans* (em vermelho), existe apenas em uma porção dessa variação. 
+
+Se considerarmos a definiação de Hutchinson sobre nicho, teríamos o **nicho fundamental** como o conjunto n-dimensional de condições que suportam a persistência da espécie e **nicho realizado** como a intersecção desse nicho com as interações bióticas. Assim, como observamos para os dados em azul, a área em vermelho mostra os limites das condições suportadas pela espécie, ou seja, uma **estimativa** do **nicho fundamental**. Já os pontos em vermelho, são de fato os locais onde observamos essa espécie e podem ser interpretadas como parte do **nicho realizado**, já que *deve haver então interações bióticas favorávies*.
+
+# As incertezas e cosequências
+
+Antes de iniciarmos essa reflexão, vamos dar um zoom no plot anterior setando os parâmetros `xlim` e `ylim` da função `plot` na primeira linha do código para uma região mais próxima do *"nicho observado"* da nossa espécie, limitando o eixo temperaturas entre 15 e 25 °C `xlim = c(16, 24)` e preciptação entre 1000 e 2500 mm `ylim=c(1000, 2500)`:
+
+```{r}
+plot(AS, col= rgb(0,0,1, 0.4), xlim = c(16, 24), ylim=c(1000, 2500), pch=20, 
+     
+     xlab="temperatura", ylab="precipitação" )+
+  
+  lines(AS[c(chull(AS), chull(AS)[1]), ], col="blue", type="l")+
+  
+  polygon(egval[c(chull(egval), chull(egval)[1]),], col=rgb(1,0,0, 0.4), border = rgb(0.5,0,0, 1))+
+  
+  points(egval, col= rgb(0.3,0,0, 0.8), pch=20)
+
+
+```
+
+Note que há muitos pontos em azul dentro da área área vermelha. Esses pontos correspondem à regiões que estão dentro dos limites suportados pela espécie, mas onde não observamos exemplares. O que isso significa?
+
+Poderia simplesmente ser uma área não amostrada. Para além disso, sobram duas possibilidades a depender da resposta para a seguinte pergunta: **a espécie tem acesso àquele determinado ponto azul dentro da área vermelha?**
+
+Podemos afirmar que essas localidades existem no espaço geográfico, mas não sabemos sua proximidade geográfica com os pontos de coleta, apenas sua "similaridade" ambiental. Deste modo, estes pontos poderiam ser uma área geograficamente inacessível à espécie, por exemplo regiões em ilha ou do outro lado dos Andes. Uma vez que a área possui condições "abióticas" favoráveis (ou seja, dentro do **nicho fundamental**) e interações bióticas favoráveis (**nicho realizado**), mas não é ocupada, a mesma configura uma subdivisão do nicho realizado. A porção do nicho realizado que apresenta de fato registros recebe o nome de **nicho existente** (veja Soberón e Peterson em *Ecological Niche and Geographical Distribution*) em detrimento à parte do nicho realizado que não apresenta registros. Em outras palavras, o nicho existente diz respeito à porção do nicho realizado que de fato observamos (no plot acima, os pontos vermelhos). 
+
+Repare que não modelamos a intersecção com fatores bióticos, mas a inferimos com base em porções possivelmente acessíveis. Se a espécie tem acesso à uma área dentro do "envelope" do **nicho fundamental**, mas de fato não ocorre logo deve haver uma desvantagem biótica. Por outro lado, se é uma porção do nicho fundamental, mas há uma barreira geográfica para alcaçar aquele ponto, então pode haver interações bióticas favoráveis, mas não temos certeza até que a espécie alcance aquela área.
+
+#Considerações finais
+
+Neste simples exercício de extração de variáveis e visualização podemos observar muito sobre nicho e suas interrelações. O nicho hipervolumétrico de Hutchinson pode ser decomposto em algumas macrodimensões: condições (*nicho fundamental*, "fatores abióticos" ou mais precisamente variáveis scenopoéticas), fatores bióticos (*nicho realizado*, incluindo recursos e interações) e acessibilidade (*nicho existente* ou *biotópos de Hutchinson*, determinados por espaços no universo geográfico acessíveis à espécie)
+
+Espero que o exercício ajude. <\br>
+*Bons estudos.*
+
+---------------
+
+[ *Prof. Dr. Wilson Frantine-Silva* ](https://www.researchgate.net/profile/Wilson-Frantine-Silva) <br />
+Pesquisador PNPD - [ORCID](https://orcid.org/0000-0002-4293-0471) <br />
+Universidade Estadual do Norte Fluminense Darcy Ribeiro - LCA.<br />
+[Programa de Pós-Graduação em Ecologia e Recursos Naturais](https://uenf.br/posgraduacao/ecologia-recursosnaturais/)

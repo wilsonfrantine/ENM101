@@ -1,0 +1,317 @@
+---
+title: "Explorando o background"
+author: "Dr. Wilson Frantine-Silva"
+output: 
+  prettydoc::html_pretty:
+  theme: cayman
+  highlight: github
+
+---
+
+# Estratégias para explorar variáveis ambientais e backgrounds
+
+No [exercício anterior](http://wilsonfrantine.git-hub.io/ENM101/ex2) exploramos como as variáveis se relacionam ao longo de espaços geográficos distintos. Para isso, amostramos valores de variáveis ambientais a partir de pontos aleatórios baseada na *extensão* das variáveis ambientais.
+
+Uma das estratégias disponíveis para amostrar o ambiente onde uma espécie vive é capturar as áreas onde a espécie *teria acesso*. Deste modo, evitamos a comparação com ranges ambientais muito distantes e nos focamos nas redondezas dos pontos onde observamos os nossos pontos de amostragem. 
+
+## Estratégia 1: amostrando ao redor
+
+Uma forma bastante simples é criar circulos (ou *buffers*) de *"determinado tamanho"* ao redor dos pontos de amostragem e utilizar sua área para extrair múltiplos pontos. Para isso precisaremos:
+
+  1. Pontos de ocorrência
+  2. Criar círculos ao redor
+  3. Criar pontos aleatórios dentro dos círculos
+  4. extrair valores a partir desses pontos
+  
+Mãos a obra..
+
+### Carregando os pacotes necessários:
+
+```{r carrengando pacotes}
+# Uma forma interessante de carregar vários pacotes é utilizando um laço de repetição
+# Primeiro criamos um vetor com nome `packages` para guardar todos os pacotes que utilizaremos
+packages<-c("raster", "dismo")
+#em seguida, criamos um laço que irá repetir a função quantas vezes tivermos elementos no vetor packages
+#dizemos que `x` será cada um dos elementos de `packages`, um por vez.
+for (x in packages){
+  if(require(x, character.only = T)){
+    cat(paste("Biblioteca", x, "carregada com sucesso!", "\n"))
+  } else{
+    install.packages(x, dependencies = T, INSTALL_opts = "--no-lock")
+  }  
+}
+
+```
+
+### * Importando dados necessários:
+
+Primeiro importaremos as ocorrências e visualizaremos o início da tabela.
+```{r carregando dados de entrada}
+#carregando os dados de ocorrência
+eg.ann<-read.csv("../../Aula 4 - Load and Data Cleaning/input.coordinates.txt", sep = "\t")
+#checando dados
+head(eg.ann)
+```
+
+Agora, importaremos as vairáveis e plotaremos para checar se foram carregadas corretamente:
+
+```{r carregando variáveis cliáticas}
+#dados climáticos
+#bio1
+temperatura<-raster("/media/wilson/MIDGARD/Documents/AARE - MNE/worldclim_layers/wc2.1_10m_bio/wc2.1_10m_bio_1.tif")
+#bio5:
+precipitacao<-raster("/media/wilson/MIDGARD/Documents/AARE - MNE/worldclim_layers/wc2.1_10m_bio/wc2.1_10m_bio_12.tif")
+
+#juntando ambas em um único objeto
+clima<-stack(temperatura, precipitacao)
+
+#Plotando para ver se está tudo ok...
+plot(clima$wc2.1_10m_bio_1, col = hcl.colors(100, palette = "RdYlBu", rev = T), main="Temperatura em °C")+
+  points(eg.ann[,2:3])
+plot(clima$wc2.1_10m_bio_12, col = rainbow(50, start=0.5, end=0.9), main = "Precipitação em mm")+
+  points(eg.ann[,2:3])
+```
+
+Para fins de comparação, vamos extrair os dados da extenção da América do Sul, assim como fizemos no exercício anterior.
+
+```{r extraindo clima da América do Sul para comparação}
+AS<-extract(clima, randomPoints(mask = clima, n = 1000, ext = extent(-82, -35, -54, 13)))
+```
+
+
+### * Criando círculos para importar os dados...
+
+```{r convertendo longlat para dataframe de polígonos}
+#Primeiro criamos um dataframe vazio com o mesmo número de pontos que temos de entrada
+spdf<-data.frame("id" = 1:nrow(eg.ann))
+
+#Em seguida, transformamos os pontos lat e long da entrada em um dataframe de objetos espaciais
+#Aqui utilizamos a função SpatialPointsDataFrame do pacote sp para criar esses pontos dizendo que
+#o objeto spdf será a saída com o argumento `data`
+spdf<-SpatialPointsDataFrame(eg.ann[,2:3], data = spdf)
+
+#veja como ele se parece
+spdf
+```
+Observe que o objeto `spdf` é uma classe complexa. Assim como um `raster`, ele possui atributos de um objeto georreferenciado do tipo *shapefile*. Note que há 10 *'features'* ou *'feições'* nesse objeto, as quais recebem os atributos que criamos no dataframe, no caso o *'id'* que demos ao criar o *dataframe* vazio. Note ainda que o campo `crs` está vazio, e como ele quarda informações da projeção, precisamos arrumari isso.
+
+> **Abrindo parênteses**</br>
+>*Dica: você pode criar quantos campos quiser para cada uma das ocorrências anotando características que ache relevante, como localidade onde amostrou, temperatura ou horário da amostragem... Basta, na hora de criar o dataframe "vazio" adicionar um campo a mais com informações para cada registro que tiver", o resultado seria uma tabela de atributos, como aquela do QGIS.*
+
+Para corrigir a projeção, vamos usar a camada raster que importamos e copiar a projeção de lá com o seguinte comando:
+
+```{r setando crs para `spdf`}
+#agora colocamos o dataset de pontos na mesma projeção que as camadas que criamos
+crs(spdf)<-crs(clima)
+#para visualizar o crs da nossa camada
+crs(spdf)
+```
+Note que temos uma projeção longlat e que o datum agora é o WGS84. 
+
+> Caso os seus dados de entrada estejam anotados em outra projeção que não a WGS84, será necessário reprojetar. Veja o help `?raster`.
+
+Enfim, vamos gerar os círculos. Utilizaremos uma função do pacote `dismo` chamada `circle`. Essa função foi desenhada para outro propósito, mas vai servir bem aqui. Precisamos apenas passar um conjunto de pontos longlat para ela e dizer o tamamnho do diâmetro que queremos o círculo em m2:
+
+```{r criando buffers}
+#criamos um objeto chamado `circle` para abrigar os circulos com 50km de diâmetro
+#que serão nossos bufferes ao entorno dos pontos de coleta.
+#o parâmetro dissolve = F diz para sobrepor os círculos. Facilita para visualizar a sobreposição.
+circle <- circles(spdf, d=50000, lonlat=T, dissolve=F)
+#podemos plotá-los
+plot(circle)
+```
+
+Resta agora extrair os valores de dentro dos círculos:
+
+```{r gerando pontos dentro dos bufferes}
+#seta um número fixo para o início da busca aleatória, assim sempre teremos os mesmos pontos.
+set.seed(1234)
+# cria pontos aleatórios dentro dos círculos do objeto circleBg
+#note que os polígonos estão no slote `polygon` do objeto circle. 
+#Depois dizemos que queremos 100 pontos no total e que será tipo aleatório, com 1km de distância entre eles (iter=1000).
+circleBg = spsample(circle@polygons, 100, type='random', iter=1000)
+
+#plotando para ver se tudo correu bem
+plot(circleBg)
+```
+
+Veja que o plot formado apresenta vários pontos nas regiões dos círculos.
+
+Olhando o mesmo no mapa
+```{r plotando bufferes sobre a temperatura}
+#dizendo os limites do plot
+limits <- c(-60, -40, -30, -19)
+#plontando a temperatura, os círculos e os pontos
+plot(temperatura, xlim=limits[1:2], ylim=limits[3:4])+
+plot(circle, add=T)+
+  points(circleBg, pch=3)+
+  points(eg.ann[,2:3], col="blue", pch=20)
+
+```
+
+A imagem resultante deve apresentar o raster de temperatura, com os círculos da área de buffer, mais os pontos aleatórios em forma de cruz e os pontos azuis como as localidades onde de fato observamos nossa espécie.
+
+
+Agora, nos resta extrair os valores a partir dos pontos aleatórios ("cruz") que criamos.
+
+```{r extraindo clima a partir dos pontos dentro dos bufferes}
+#criamos um objeto chamado circvalues para abrigar os dados extraídos com a função extract do pacote raster.
+circvalues<-extract(clima, circleBg)
+
+#vamos olhar o objeto de saída que resultou
+head(circvalues)
+```
+Note que temos alguns `NA` resultante da tentativa de amostragem em região sem dados climáticos, como no mar. Precisamos removê-los! Para tantos vamos utilizar a função `na.exclude`, savando o resultado no objeto `egval`.
+
+```{r excluindo `NA` dos valores extraídos}
+egval<- na.exclude(circvalues)
+
+head(egval)
+```
+
+Para fins de comparação, vamos extrair também valores apenas dos dados de ocorrência
+```{r extraindo valores a partir dos pontos de entrada}
+eginput.val<-extract(clima, eg.ann[,2:3])
+head(eginput.val)
+```
+Agora vamos plotar tudo isso para comparar a relação entre os conjuntos de dados extraídos:
+
+```{r plotando todos os valores para comparação}
+plot(AS, col= rgb(0,0,0, 1), xlim = c(14, 24), ylim=c(1000, 3500), pch=3, 
+     
+     xlab="Temperatura", ylab="Precipitação" )+
+  
+  lines(AS[c(chull(AS), chull(AS)[1]), ], col="blue", type="l")+
+  
+  polygon(egval[c(chull(egval), chull(egval)[1]),], col=rgb(0,0,1, 0.25), border = rgb(0,0,1, 0.8))+
+  
+  points(egval, col= rgb(0,0,1, 0.8), pch=19)+
+  points(eginput.val, col= rgb(1,0,0, 0.8), pch=19)
+
+```
+
+Veja que há uma relação interessante entre os os pontos de ocorrência (*em vermelho*), os pontos amostrados pelos circulos (*em azul*) e os pontos amostrados por extensão (*cruzes negras*). Os três conjuntos mostram aspectos diferentes do ambiente. Contudo, os pontos amostrados pela estratégia de círculos é com certeza proveniente de regiões geográficas acessíveis, enquanto os pontos representados pelas cruzes podem ou não ser.
+
+## Estratégia 2: Amostrando de limítes geográficos:
+
+É bastante fácil imaginar que podemos ter um polígono ou um raster que represente uma área de interesse onde achamos que nossa espécie deve estar restrita.
+
+Há com certeza, várias formas de obter um polígono ou um raster que delimite nossa área, mas vamos pensar que gostaríamos de ver o ambiente no estado do Rio de Janeiro e temos um shapefile para isso. Aqui iremos utilizar a função `read_state` do pacote `geobr` para obter esse *shapefile*.
+
+>*Abrindo parêntese*
+>Vale uma nota sobre o pacote `geobr`. Este pacote tem várias fontes de dados disponibilizadas pelo IBGE em alta e baixa resoluções. Para mais detalhes, visite o [site do projeto](https://cran.r-project.org/web/packages/geobr/vignettes/intro_to_geobr.html) ou instale o pacote e veja o help: `?geobr`.
+
+```{r carregando polígono RJ}
+#Para instalar o pacote, rode a linha comentada a baixo
+#install.packages("geobr")
+
+#para carregar o pacote:
+library("geobr")
+
+#baixando o shape do estado
+rj<-read_state(code_state = "RJ", year = 2018)
+
+#pedindo ao R para mostrar o objeto no terminal
+rj
+
+#plotando apenas a geometria do estado
+plot(rj$geom)
+```
+
+Há contudo um "problema". O *datum* do shape é o [*Geodetic Reference System 1980*](https://en.wikipedia.org/wiki/Geodetic_Reference_System_1980) anotado como *"GRS80"*, como estamos utilizando *"WGS84"*, precisaremos reprojetar. Para isso utilizaremos o pacote `sf` [(simple feature)](https://r-spatial.github.io/sf/) para tratar o polígono.
+
+```{r reprojetando CRS do polígono RJ }
+#install.packages("sf")
+#install.packages("lwgeom", INSTALL_opts = "--no-lock")
+library("sf")
+library("lwgeom")
+
+#vamos primeiro capturar o crs das variáveis que estamos utilizando através do objeto clima que criamos lá no começo.
+target_crs<-crs(clima)
+
+#agora utilizaremos a função st_transforme, informando o polígono e o crs que desejamos.
+rj<-st_transform(rj, crs = st_crs(target_crs))
+
+#para conferir, vamos plotar tudo.
+plot(temperatura, xlim=c(-45,-40), ylim=c(-24,-20.5))+
+  plot(rj$geom, add=T)
+```
+
+
+Com nosso polígono perfeitamente alinhado em mãos, fica fácil extrair os dados.
+Vamos primeiro criar os pontos aleátorios lá dentro:
+
+```{r criando pontos aleatórios dentro do RJ}
+#seta um número fixo para o início da busca aleatória, assim sempre teremos os mesmos pontos.
+set.seed(1234)
+# cria pontos aleatórios dentro dos círculos do objeto circleBg
+#note que os polígonos estão no slote `polygon` do objeto circle. 
+#Depois dizemos que queremos 100 pontos no total e que será tipo aleatório, com 1km de distância entre eles (iter=1000).
+rjbg <- st_sample(rj, 1000)
+
+#plotando para ver se tudo correu bem
+plot(rjbg, pch=3)
+```
+
+Uma vez que temos os pontos, podemos agora extrair os dados exatamente como fizemos anteriormente. Contudo, teremos que antes converter o nossos pontos extraídos do estado do Rio de Janeiro para um tipo que o pacote `raster` compreenda, que é o tipo `spatial` do pacote `sp`. Faremos isso em uma linha.
+
+```{r convertendo `sf` para `sp`}
+#Uma vez que objetos sf são listas, precisamos convertêlos para um tipo espacial via pacote `sp`.
+#fazemos isso com a função `as()`. Paramais detalhes, veja ?as.
+rjbg.as.sp<-as(rjbg, "Spatial")
+```
+
+Veja rapidamente a diferença entre os dois tipos
+
+```{r comparando `sf` e `sp`}
+
+#compare a estrutura dos dois tipos
+cat("\n Esse é o objeto tipo 'simple feature' do pacote `sf`: \n \n")
+str(rjbg)
+head(rjbg)
+
+cat("\n \n Esse é o objeto tipo 'spatial' do pacote `sp`: \n \n")
+str(rjbg.as.sp)
+head(rjbg.as.sp)
+
+```
+Note que `rjbg` do tipo `sf` é um conjunto de *features*, enquanto o `rjbg.as.sp` é uma única *feature*, além disso `rjbg.as.sp` possui 3 *slots* (`coords`, `bbox`, `proj4string`), e o slot `coords` pode ser mais facilmente acessado pelo pacote `raster`.
+
+
+Tecnicalidades à parte, agora sim podemos extrair os dados climáticos.
+
+```{r extraindo dados do estado do RJ}
+#criando um objeto para abrigar os dados extraídos
+rjvalues<-extract(clima, rjbg.as.sp)
+cat("Veja os dados climáticos extraídos: \n \n")
+head(rjvalues)
+```
+
+Vamos plotar e comparar
+
+```{r plotando todos os valores climáticos do RJ}
+plot(AS, col= rgb(0,0,0, 1), xlim = c(14, 24), ylim=c(1000, 3500), pch=3, xlab="Temperatura", ylab="Precipitação" )+
+  lines(AS[c(chull(AS), chull(AS)[1]), ], col="blue", type="l")+
+  polygon(rjvalues[c(chull(rjvalues), chull(rjvalues)[1]),], col=rgb(0,0,1, 0.25), border = rgb(0,0,1, 0.8))+
+  points(rjvalues, col= rgb(0,0,1, 0.8), pch=19)+
+  polygon(eginput.val[c(chull(eginput.val), chull(eginput.val)[1]),], col=rgb(1,0,0, 0.25), border = rgb(1,0,0, 0.8))+
+  points(eginput.val, col= rgb(1,0,0, 0.8), pch=19)
+  
+
+```
+
+Note como os dados extraídos do estado do Rio de Janeiro (pontos azuis) se comportam em relação ao geral da América do Sul (cruzes negras) e como o a nossa espécie tem boa sobreposição com o estado do Rio de Janeiro.
+
+# Consireções finais:
+
+Extrair dados de camadas ambientais é um passo primordial para modelage. Vimos nesse breve exercício, duas maneiras de proceder essa extração. A primeira amostrando dados a partir de *buffers* e a segunda a partir de um *polígono limite*. A escolha do procedimento correto vai depender do nosso objetivo, das particularidades do organismo e da questão por trás da análise.
+
+Espero que o exercício tenha sido útil.
+*Bons estudos.*
+
+---------------
+
+[ *Prof. Dr. Wilson Frantine-Silva* ](https://www.researchgate.net/profile/Wilson-Frantine-Silva) <br />
+Pesquisador PNPD - [ORCID](https://orcid.org/0000-0002-4293-0471) <br />
+Universidade Estadual do Norte Fluminense Darcy Ribeiro - LCA.<br />
+[Programa de Pós-Graduação em Ecologia e Recursos Naturais](https://uenf.br/posgraduacao/ecologia-recursosnaturais/)
