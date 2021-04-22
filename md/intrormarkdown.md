@@ -1,11 +1,6 @@
 ---
 title: "R markdown: comandos básicos"
 author: "Dr. Wilson Frantine-Silva"
-output: 
-  prettydoc::html_pretty:
-  theme: cayman
-  highlight: github
-  df_print: kable
 ---
 
 # R Markdown - Visão geral {#topico1}
@@ -34,7 +29,7 @@ No Rstudio, vá em "file -> new file -> R markdown" e clique em `OK`. Ao clicar 
   
 ## Inserindo bloco de código {#t1}
 
-Você pode incorporar um fragmento de código R como este:
+Você pode incorporar um fragmento de código R como este:  
 
 ```{r cars}
 summary(cars)
@@ -42,7 +37,7 @@ summary(cars)
 
 ## Incluindo Plots {#t2}
 
-Você também pode incorporar gráficos, por exemplo:
+Você também pode incorporar gráficos, por exemplo:  
 
 ```{r pressure, echo=FALSE}
 plot(pressure)
