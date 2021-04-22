@@ -31,7 +31,7 @@ No Rstudio, vá em "file -> new file -> R markdown" e clique em `OK`. Ao clicar 
 
 Você pode incorporar um fragmento de código R como este:  
 
-```{r cars}
+```{r}
 summary(cars)
 ```
 
