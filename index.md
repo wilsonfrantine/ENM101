@@ -12,6 +12,10 @@ Veja abaixo a lista completa de exercícios:
 1. [Obtendo e limpando dados de ocorrência de espécies a partir do GBIF](https://wilsonfrantine.github.io/ENM101/ex1)
 2. [Variáveis Ambientais](https://wilsonfrantine.github.io/ENM101/ex2.html) 
 3. [Técnicas para explorar o background](https://wilsonfrantine.github.io/ENM101/ex3.html)
+4. [Autocorrelação espacial](https://wilsonfrantine.github.io/ENM101/ex4.html)
+
+### Bonus:
+1. [Introdução ao rmarkdown](https://wilsonfrantine.github.io/ENM101/md/intro-rmd.html)
 
 ### Dúvidas?
 
