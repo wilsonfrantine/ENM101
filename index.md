@@ -13,7 +13,7 @@ Veja abaixo a lista completa de exercícios:
 2. [Variáveis Ambientais](https://wilsonfrantine.github.io/ENM101/ex2.html) 
 3. [Técnicas para explorar o background](https://wilsonfrantine.github.io/ENM101/ex3.html)
 4. [Autocorrelação espacial](https://wilsonfrantine.github.io/ENM101/ex4.html)
-5. [Colinearidade](https://wilsonfrantine.github.io/ENM101/ex4.html)
+5. [Colinearidade](https://wilsonfrantine.github.io/ENM101/ex5.html)
 
 ### Bonus:
 1. [Introdução ao rmarkdown](https://wilsonfrantine.github.io/ENM101/md/intro-rmd.html)
